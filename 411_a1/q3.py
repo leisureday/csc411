@@ -15,6 +15,9 @@ class BatchSampler(object):
         self.features = data.shape[1]
         self.batch_size = batch_size
 
+        self.data = data
+        self.targets = targets
+
         self.indices = np.arange(self.num_points)
 
     def random_batch_indices(self, m=None):
@@ -36,8 +39,8 @@ class BatchSampler(object):
         If m is given the batch will be of size m. Otherwise will default to the class initialized value.
         '''
         indices = self.random_batch_indices(m)
-        X_batch = np.take(X, indices, 0)
-        y_batch = y[indices]
+        X_batch = np.take(self.data, indices, 0)
+        y_batch = self.targets[indices]
         return X_batch, y_batch    
 
 
@@ -70,13 +73,35 @@ def cosine_similarity(vec1, vec2):
 
     return dot / (sum1 * sum2)
 
+
 #TODO: implement linear regression gradient
 def lin_reg_gradient(X, y, w):
     '''
     Compute gradient of linear regression model parameterized by w
+    X: mxd
+    y: mx1
+    w: dx1
     '''
-    raise NotImplementedError()
+    gradient = 2*(X.transpose().dot(X).dot(w) - X.transpose().dot(y))
+    return gradient
 
+
+def k_lin_reg_gradient(batch_sampler, w, k):
+    '''
+    compute mean of gradient of k mini-batches
+    '''
+    d = w.shape[0]
+    k_gradient = np.zeros((k, d))
+    for i in range(k):
+        X_b, y_b = batch_sampler.get_batch()
+        batch_grad = lin_reg_gradient(X_b, y_b, w) 
+        k_gradient[i] = batch_grad
+    print("k_gradient.shape: {0}".format(k_gradient.shape))
+    mean_gradient = np.average(k_gradient, axis=0)
+    print("mean_gradient.shape: {0}".format(mean_gradient.shape))        
+    return mean_gradient
+    
+    
 def main():
     # Load data and randomly initialise weights
     X, y, w = load_data_and_init_params()
@@ -84,9 +109,23 @@ def main():
     batch_sampler = BatchSampler(X, y, BATCHES)
 
     # Example usage
-    X_b, y_b = batch_sampler.get_batch()
-    batch_grad = lin_reg_gradient(X_b, y_b, w)
-
-
+    # X_b, y_b = batch_sampler.get_batch()
+    # batch_grad = lin_reg_gradient(X_b, y_b, w)
+    mean_gradient = k_lin_reg_gradient(batch_sampler, w, 500)
+    true_gradient = lin_reg_gradient(X, y, w)
+    
+    '''
+    partial derivative estimator
+    w1 = w.copy()
+    w2 = w.copy()
+    w1[0] = w1[0] + 0.0005
+    w2[0] = w2[0] - 0.0005    
+    from numpy.linalg import norm
+    element_0_estimator = (norm(y - X.dot(w1))**2 - norm(y - X.dot(w2))**2)/0.001
+    '''                       
+    similarity = cosine_similarity(mean_gradient, true_gradient)
+    print("cosine_similarity: {0}".format(similarity))
+    
+    
 if __name__ == '__main__':
     main()
