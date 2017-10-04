@@ -21,6 +21,7 @@ d = x.shape[1] # number of features with bias
 
 idx = np.random.permutation(range(N))
 
+
 #helper function
 def l2(A,B):
     '''
@@ -39,7 +40,7 @@ def l2(A,B):
 def run_on_fold(x_test, y_test, x_train, y_train, taus):
     '''
     Input: x_test is the N_test x d design matrix
-           y_test is the N_test x 1 targets vector        
+           y_test is the N_test x 1 targets vector
            x_train is the N_train x d design matrix
            y_train is the N_train x 1 targets vector
            taus is a vector of tau values to evaluate
@@ -52,8 +53,8 @@ def run_on_fold(x_test, y_test, x_train, y_train, taus):
                         for i in range(N_test)])
         losses[j] = ((predictions.flatten()-y_test.flatten())**2).mean()
     return losses
- 
- 
+
+
 #to implement
 # locally reweighted least squares
 def LRLS(test_datum,x_train,y_train, tau,lam=1e-5):
@@ -65,45 +66,29 @@ def LRLS(test_datum,x_train,y_train, tau,lam=1e-5):
            lam is the regularization parameter
     output is y_hat the prediction on test_datum
     '''
-    ## TODO
     n_train = x_train.shape[0]
-    A = np.zeros((n_train, n_train))
- 
-    # compute all the values inside exp()
-    '''
-    values = np.empty(0)
-    for i in range(n_train):
-        value = (np.linalg.norm(test_datum - x_train[i])**2)/(2*(tau**2))
-        values = np.append(values, value)    
-    '''
-    distances = l2(test_datum, x_train).transpose()
-    values = distances/(2*(tau**2))
-    max_value = np.amax(values)
-    
+
+    # compute norms and all the values inside exp()
+    norms = l2(x_train, test_datum.transpose())
+    values = (-1*norms)/(2*(tau**2))
+
     # compute A
-    for j in range(n_train):
-        value = values[j]
-        B = max_value*value
-        sumexp = np.exp(scipy.misc.logsumexp(values, b = 1/np.exp(B)))
-        a = np.exp(value - B)/sumexp
-        A[j, j] = a
-    
-    # compute w and y_hat    
+    A_diagonal = np.exp(values - scipy.misc.logsumexp(values))
+    A = np.diagflat(A_diagonal.transpose())
+
+    # compute w and y_hat
     a = np.add(x_train.transpose().dot(A).dot(x_train), (np.identity(d)*lam))
     b = x_train.transpose().dot(A).dot(y_train)
     w = np.linalg.solve(a, b)
-    y_hat = np.dot(test_datum, w)
-    
+    y_hat = np.dot(test_datum.transpose(), w)
+
     return y_hat
-    ## TODO
-
-
 
 
 def run_k_fold(x,y,taus,k):
     '''
     Input: x is the N x d design matrix
-           y is the N x 1 targets vector    
+           y is the N x 1 targets vector
            taus is a vector of tau values to evaluate
            K in the number of folds
     output is k_losses: a vector of k-fold cross validation losses one for each tau value
@@ -112,21 +97,21 @@ def run_k_fold(x,y,taus,k):
     permutation = np.random.permutation(N)
     fold_length = np.floor(N/k)
     k_losses = np.zeros((k, taus.shape[0]))
-    
+
     for i in range(k):
         # divide input data k times
         testing_indices = permutation[int(fold_length*i): int(fold_length*(i+1))]
         training_indices = np.concatenate((permutation[0: int(fold_length*i)], permutation[int(fold_length*(i+1)): -1]))
-        
-        x_test = np.take(x, testing_indices, axis=0, out=None, mode='wrap')    
-        y_test = np.take(y, testing_indices, axis=0, out=None, mode='wrap') 
-        x_train = np.take(x, training_indices, axis=0, out=None, mode='wrap')    
+
+        x_test = np.take(x, testing_indices, axis=0, out=None, mode='wrap')
+        y_test = np.take(y, testing_indices, axis=0, out=None, mode='wrap')
+        x_train = np.take(x, training_indices, axis=0, out=None, mode='wrap')
         y_train = np.take(y, training_indices, axis=0, out=None, mode='wrap')
-        
+
         # get one fold losses
         losses = run_on_fold(x_test, y_test, x_train, y_train, taus)
         k_losses[i] = losses
-        
+
     average_k_losses = np.average(k_losses, axis=0)
     return average_k_losses
     ## TODO
@@ -136,6 +121,9 @@ if __name__ == "__main__":
     # In this excersice we fixed lambda (hard coded to 1e-5) and only set tau value. Feel free to play with lambda as well if you wish
     taus = np.logspace(1.0,3,200)
     losses = run_k_fold(x,y,taus,k=5)
-    plt.plot(losses)
+    plt.plot(taus, losses, 'b.')
+    plt.title('Q2')
+    plt.ylabel('average k losses')
+    plt.xlabel('tau')
+    plt.show()
     print("min loss = {}".format(losses.min()))
-

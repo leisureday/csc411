@@ -1,5 +1,7 @@
-import numpy as np
 from sklearn.datasets import load_boston
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy
 
 BATCHES = 50
 
@@ -88,7 +90,8 @@ def lin_reg_gradient(X, y, w):
 
 def k_lin_reg_gradient(batch_sampler, w, k):
     '''
-    compute mean of gradient of k mini-batches
+    compute k gradients of k mini-batches
+    k_gradient: k x features
     '''
     d = w.shape[0]
     k_gradient = np.zeros((k, d))
@@ -96,35 +99,58 @@ def k_lin_reg_gradient(batch_sampler, w, k):
         X_b, y_b = batch_sampler.get_batch()
         batch_grad = lin_reg_gradient(X_b, y_b, w) 
         k_gradient[i] = batch_grad
-    print("k_gradient.shape: {0}".format(k_gradient.shape))
-    mean_gradient = np.average(k_gradient, axis=0)
-    print("mean_gradient.shape: {0}".format(mean_gradient.shape))        
-    return mean_gradient
+
+    return k_gradient
     
-    
+def compute_m_variances(X, y, w, m, k):
+    # return m_variances: (m) x features
+    # m_variances[i] corresponds to m == i+1
+    features = X.shape[1]
+    m_variances = np.zeros((m, features))
+    for batch_size in range(1, 401, 1):
+        batch_sampler = BatchSampler(X, y, batch_size)
+        k_gradient = k_lin_reg_gradient(batch_sampler, w, k)
+        variances = np.var(k_gradient, axis=0)
+        m_variances[batch_size-1] = variances
+    return m_variances
+        
 def main():
     # Load data and randomly initialise weights
     X, y, w = load_data_and_init_params()
     # Create a batch sampler to generate random batches from data
     batch_sampler = BatchSampler(X, y, BATCHES)
-
     # Example usage
     # X_b, y_b = batch_sampler.get_batch()
     # batch_grad = lin_reg_gradient(X_b, y_b, w)
-    mean_gradient = k_lin_reg_gradient(batch_sampler, w, 500)
-    true_gradient = lin_reg_gradient(X, y, w)
-    
+     
+    # compute mean_gradient, true_gradient, similarity
+    from numpy.linalg import norm
+    k_gradient = k_lin_reg_gradient(batch_sampler, w, 500)
+    mean_gradient = mean_gradient = np.average(k_gradient, axis=0)    
+    true_gradient = lin_reg_gradient(X, y, w) 
     '''
     partial derivative estimator
     w1 = w.copy()
     w2 = w.copy()
     w1[0] = w1[0] + 0.0005
     w2[0] = w2[0] - 0.0005    
-    from numpy.linalg import norm
     element_0_estimator = (norm(y - X.dot(w1))**2 - norm(y - X.dot(w2))**2)/0.001
     '''                       
-    similarity = cosine_similarity(mean_gradient, true_gradient)
-    print("cosine_similarity: {0}".format(similarity))
+    c_similarity = cosine_similarity(mean_gradient, true_gradient)
+    s_similarity = norm(mean_gradient - true_gradient)**2
+    print("cosine_similarity: {0}".format(c_similarity))
+    print("square_distance_metric: {0}".format(s_similarity))  
+    
+    # compute m_variances and plot log(m_variances[:, 0]) against log(m) 
+    m_variances = compute_m_variances(X, y, w, 400, 500)
+    log_m_variances_0 = np.log(m_variances[:, 0])
+    log_m = np.log(np.arange(1, 401, 1))
+    
+    plt.plot(log_m, log_m_variances_0, 'b.')
+    plt.title('Q3')
+    plt.ylabel('log(variance of parameter 0)')
+    plt.xlabel('log(m)')
+    plt.show()    
     
     
 if __name__ == '__main__':
