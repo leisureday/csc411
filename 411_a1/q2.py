@@ -55,7 +55,6 @@ def run_on_fold(x_test, y_test, x_train, y_train, taus):
     return losses
 
 
-#to implement
 # locally reweighted least squares
 def LRLS(test_datum,x_train,y_train, tau,lam=1e-5):
     '''
@@ -72,7 +71,7 @@ def LRLS(test_datum,x_train,y_train, tau,lam=1e-5):
     norms = l2(x_train, test_datum.transpose())
     values = (-1*norms)/(2*(tau**2))
 
-    # compute A
+    # compute A whose diagonal consists of a(i)
     A_diagonal = np.exp(values - scipy.misc.logsumexp(values))
     A = np.diagflat(A_diagonal.transpose())
 
@@ -94,12 +93,13 @@ def run_k_fold(x,y,taus,k):
     output is k_losses: a vector of k-fold cross validation losses one for each tau value
     '''
     ## TODO
+    # initialize some variables
     permutation = np.random.permutation(N)
     fold_length = np.floor(N/k)
     k_losses = np.zeros((k, taus.shape[0]))
 
+    # k cross validation
     for i in range(k):
-        # divide input data k times
         testing_indices = permutation[int(fold_length*i): int(fold_length*(i+1))]
         training_indices = np.concatenate((permutation[0: int(fold_length*i)], permutation[int(fold_length*(i+1)): -1]))
 
@@ -108,10 +108,11 @@ def run_k_fold(x,y,taus,k):
         x_train = np.take(x, training_indices, axis=0, out=None, mode='wrap')
         y_train = np.take(y, training_indices, axis=0, out=None, mode='wrap')
 
-        # get one fold losses
+        # get one fold losses, and add it to k_losses
         losses = run_on_fold(x_test, y_test, x_train, y_train, taus)
         k_losses[i] = losses
-
+    
+    # compute the average
     average_k_losses = np.average(k_losses, axis=0)
     return average_k_losses
     ## TODO
@@ -121,6 +122,7 @@ if __name__ == "__main__":
     # In this excersice we fixed lambda (hard coded to 1e-5) and only set tau value. Feel free to play with lambda as well if you wish
     taus = np.logspace(1.0,3,200)
     losses = run_k_fold(x,y,taus,k=5)
+    # Plot these loss values for each choice of τ.
     plt.plot(taus, losses, 'b.')
     plt.title('Q2')
     plt.ylabel('average k losses')

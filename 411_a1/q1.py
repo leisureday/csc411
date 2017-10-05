@@ -15,6 +15,7 @@ def load_data():
 
 def visualize(X, y, features):
     plt.figure(figsize=(20, 5))
+    # plt.suptitle('Q1')
     feature_count = X.shape[1]
 
     # i: index
@@ -22,7 +23,7 @@ def visualize(X, y, features):
         plt.subplot(3, 5, i + 1)
         #TODO: Plot feature i against y
         # 'ro' to plot as red circle
-        plt.plot(X[:, i], y, '.')
+        plt.plot(X[:, i], y, 'b.')
         plt.title(features[i])
         plt.ylabel('target')
     
@@ -43,13 +44,10 @@ def fit_regression(X,Y):
 def main():
     # Load the data
     X, y, features = load_data()
-
     print("Features: {}".format(features))
     
     # Visualize the features
-    '''
     visualize(X, y, features)
-    '''
     
     #TODO: Split data into train and test
     # get a randomed array of indices
@@ -72,19 +70,24 @@ def main():
 
     # Fit regression model
     w = fit_regression(training_X, training_y)
-    print(w)
-
-    # Compute fitted values, MSE(mean square error), etc.
-    test_count = testing_y.shape[0]
-    SE = 0
-    for index in range(test_count):
-        x = testing_X[index, :]
-        fitted_y = np.dot(x, w)
-        SE += (testing_y[index] - fitted_y)**2
+    print('w:\n{0}\n'.format(w))
     
-    MSE = SE/test_count
-    print(MSE)
-        
+    # Compute fitted values, MSE(mean square error)
+    test_count = testing_y.shape[0]
+    # mean square error
+    MSE = (np.linalg.norm(testing_y - testing_X.dot(w))**2)/test_count
+    print('Mean square error:\n{0}\n'.format(MSE))
+    # standard error
+    SE = math.sqrt(MSE)
+    print('standard error:\n{0}\n'.format(SE))    
+    # mean of sum of l1 losses
+    ML1 = np.sum(np.absolute(testing_y - testing_X.dot(w)))/test_count
+    print('mean of sum of l1 losses:\n{0}\n'.format(ML1))    
+    
+    # print feature:weight table
+    print('feature:weight table:\n')
+    for i in range(13):
+        print(features[i], ':', w[i+1], '\n') 
 
 if __name__ == "__main__":
     main()

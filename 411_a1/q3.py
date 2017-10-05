@@ -84,35 +84,43 @@ def lin_reg_gradient(X, y, w):
     y: mx1
     w: dx1
     '''
-    gradient = 2*(X.transpose().dot(X).dot(w) - X.transpose().dot(y))
+    batch_size = X.shape[0]
+    gradient = (2*(X.transpose().dot(X).dot(w) - X.transpose().dot(y)))/batch_size
     return gradient
 
 
 def k_lin_reg_gradient(batch_sampler, w, k):
     '''
     compute k gradients of k mini-batches
-    k_gradient: k x features
+    return k_gradient: k x features
     '''
     d = w.shape[0]
     k_gradient = np.zeros((k, d))
+    
+    # get k random batches and compute gradient on them
     for i in range(k):
         X_b, y_b = batch_sampler.get_batch()
         batch_grad = lin_reg_gradient(X_b, y_b, w) 
         k_gradient[i] = batch_grad
-
+        
     return k_gradient
+
     
 def compute_m_variances(X, y, w, m, k):
     # return m_variances: (m) x features
     # m_variances[i] corresponds to m == i+1
     features = X.shape[1]
     m_variances = np.zeros((m, features))
+    
+    # for each batch size m, get k batches and compute variance of gradient based on k gradients
+    # then add variance to m_variances
     for batch_size in range(1, 401, 1):
         batch_sampler = BatchSampler(X, y, batch_size)
         k_gradient = k_lin_reg_gradient(batch_sampler, w, k)
         variances = np.var(k_gradient, axis=0)
         m_variances[batch_size-1] = variances
     return m_variances
+
         
 def main():
     # Load data and randomly initialise weights
@@ -126,32 +134,36 @@ def main():
     # compute mean_gradient, true_gradient, similarity
     from numpy.linalg import norm
     k_gradient = k_lin_reg_gradient(batch_sampler, w, 500)
-    mean_gradient = mean_gradient = np.average(k_gradient, axis=0)    
+    mean_gradient = np.average(k_gradient, axis=0)    
     true_gradient = lin_reg_gradient(X, y, w) 
-    '''
-    partial derivative estimator
+    print("mean_gradient: {0}".format(mean_gradient))
+    print("true_gradient: {0}".format(true_gradient))    
+    
+    # partial derivative estimator
     w1 = w.copy()
     w2 = w.copy()
     w1[0] = w1[0] + 0.0005
     w2[0] = w2[0] - 0.0005    
-    element_0_estimator = (norm(y - X.dot(w1))**2 - norm(y - X.dot(w2))**2)/0.001
-    '''                       
+    element_0_estimator = ((norm(y - X.dot(w1))**2)/506 - (norm(y - X.dot(w2))**2)/506)/0.001
+    print("element_0_estimator: {0}".format(element_0_estimator))
+     
+    # compute similarities   
     c_similarity = cosine_similarity(mean_gradient, true_gradient)
     s_similarity = norm(mean_gradient - true_gradient)**2
     print("cosine_similarity: {0}".format(c_similarity))
     print("square_distance_metric: {0}".format(s_similarity))  
     
-    # compute m_variances and plot log(m_variances[:, 0]) against log(m) 
+    # compute m_variances
     m_variances = compute_m_variances(X, y, w, 400, 500)
     log_m_variances_0 = np.log(m_variances[:, 0])
     log_m = np.log(np.arange(1, 401, 1))
     
+    # plot log(m_variances[:, 0]) against log(m)
     plt.plot(log_m, log_m_variances_0, 'b.')
     plt.title('Q3')
-    plt.ylabel('log(variance of parameter 0)')
+    plt.ylabel('log(variance(parameter_0))')
     plt.xlabel('log(m)')
     plt.show()    
-    
     
 if __name__ == '__main__':
     main()
