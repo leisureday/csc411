@@ -6,6 +6,8 @@ Here you should implement and evaluate the k-NN classifier.
 
 import data
 import numpy as np
+import sklearn
+
 # Import pyplot - plt.imshow is useful!
 import matplotlib.pyplot as plt
 
@@ -44,8 +46,16 @@ class KNearestNeighbor(object):
 
         You should return the digit label provided by the algorithm
         '''
-        digit = None
-        return digit
+        l2_dists = self.l2_distance(test_point)
+        k_indices = np.argpartition(l2_dists, k)[:k]
+        k_labels = self.train_labels[k_indices]
+        uniques, counts = np.unique(k_labels, return_counts=True)
+        max_count_index = np.argmax(counts)
+        digit = uniques[max_count_index]
+        if np.argwhere(counts == counts[max_count_index]).shape[0] > 1:
+            return self.query_knn(test_point, k-1)
+        else:
+            return digit
 
 def cross_validation(knn, k_range=np.arange(1,15)):
     for k in k_range:
@@ -66,7 +76,7 @@ def main():
     knn = KNearestNeighbor(train_data, train_labels)
 
     # Example usage:
-    predicted_label = knn.query_knn(test_data[0], 1)
+    predicted_label = knn.query_knn(test_data[0], 2)
 
 if __name__ == '__main__':
     main()
