@@ -23,7 +23,7 @@ class KNearestNeighbor(object):
     def l2_distance(self, test_point):
         '''
         Compute L2 distance between test point and each training point
-        
+
         Input: test_point is a 1d numpy array
         Output: dist is a numpy array containing the distances between the test point and each training point
         '''
@@ -55,30 +55,63 @@ class KNearestNeighbor(object):
         label = uniques[max_count_index]
         # check if there are ties, if there are, reduce k and call recursion.
         if np.argwhere(counts == counts[max_count_index]).shape[0] > 1:
-            return self.query_knn(test_point, k-1)
+            return self.query_knn(test_point, k - 1)
         else:
             return label
 
-def cross_validation(knn, k_range=np.arange(1,15)):
+
+def cross_validation(input_data, input_labels, k_range=np.arange(1,16)):
+    '''
+    Perform 10-fold cross validation to find the best value for k
+
+    Note: Previously this function took knn as an argument instead of train_data,train_labels.
+    The intention was for students to take the training data from the knn object - this should be clearer
+    from the new function signature.
+    '''
+    kf = KFold(n_splits=10, shuffle=True)
+    max_accuracy = 0
+    optimal_k = 0;
     for k in k_range:
-        # Loop over folds
-        # Evaluate k-NN
-        # ...
-        pass
+        accuracies = np.zeros(0)
+        for train_index, test_index in kf.split(input_data):
+            train_data = input_data[train_index]
+            train_labels = input_labels[train_index]
+            test_data = input_data[test_index]
+            test_labels = input_labels[test_index]
+            knn = KNearestNeighbor(train_data, test_data)
+            accuracy = classification_accuracy(knn, k, test_data, test_labels)
+            accuracies = np.append(accuracies, accuracy)
+        avg_accuracy = np.mean(accuracies)
+        if max_accuracy < avg_accuracy:
+            max_accuracy = avg_accuracy
+            optimal_k = k
+    return optimal_k
+
 
 def classification_accuracy(knn, k, eval_data, eval_labels):
     '''
     Evaluate the classification accuracy of knn on the given 'eval_data'
     using the labels
+    accuracy: percentage of correct predication
     '''
-    pass
+    num_data = eval_data.shape[0]
+    num_correct_predict = 0
+    for i in num_data:
+        data = eval_data[i]
+        true_label = eval_labels[i]
+        predicted_label = knn.query_knn(data, k)
+        if predicted_label == true_label:
+            num_correct_predict += 1
+    return float(num_correct_predict)/num_data
+
 
 def main():
     train_data, train_labels, test_data, test_labels = data.load_all_data('data')
     knn = KNearestNeighbor(train_data, train_labels)
 
     # Example usage:
-    predicted_label = knn.query_knn(test_data[0], 2)
+    # predicted_label = knn.query_knn(test_data[0], 1)
+    cross_validation(train_data, train_labels, k_range=np.arange(1, 16))
 
 if __name__ == '__main__':
     main()
