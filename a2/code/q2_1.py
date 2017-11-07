@@ -6,8 +6,7 @@ Here you should implement and evaluate the k-NN classifier.
 
 import data
 import numpy as np
-import sklearn
-
+from sklearn.model_selection import KFold
 # Import pyplot - plt.imshow is useful!
 import matplotlib.pyplot as plt
 
@@ -35,7 +34,6 @@ class KNearestNeighbor(object):
         assert test_point.shape[1] == self.train_data.shape[1]
 
         # Compute squared distance
-        train_norm = (self.train_data**2).sum(axis=1).reshape(-1,1)
         test_norm = (test_point**2).sum(axis=1).reshape(1,-1)
         dist = self.train_norm + test_norm - 2*self.train_data.dot(test_point.transpose())
         return np.squeeze(dist)
@@ -46,16 +44,20 @@ class KNearestNeighbor(object):
 
         You should return the digit label provided by the algorithm
         '''
+        # get l2 distances between test_point and all train_data
         l2_dists = self.l2_distance(test_point)
+        # get the k indices and corresponding training labels with the smallest distance
         k_indices = np.argpartition(l2_dists, k)[:k]
         k_labels = self.train_labels[k_indices]
+        # get number of occurrence of each label among k labels, and find which label occurs most often
         uniques, counts = np.unique(k_labels, return_counts=True)
         max_count_index = np.argmax(counts)
-        digit = uniques[max_count_index]
+        label = uniques[max_count_index]
+        # check if there are ties, if there are, reduce k and call recursion.
         if np.argwhere(counts == counts[max_count_index]).shape[0] > 1:
             return self.query_knn(test_point, k-1)
         else:
-            return digit
+            return label
 
 def cross_validation(knn, k_range=np.arange(1,15)):
     for k in k_range:
