@@ -73,12 +73,13 @@ def cross_validation(input_data, input_labels, k_range=np.arange(1,16)):
     optimal_k = 0;
     for k in k_range:
         accuracies = np.zeros(0)
+        # loop through 10 folds and compute average accuracy
         for train_index, test_index in kf.split(input_data):
             train_data = input_data[train_index]
             train_labels = input_labels[train_index]
             test_data = input_data[test_index]
             test_labels = input_labels[test_index]
-            knn = KNearestNeighbor(train_data, test_data)
+            knn = KNearestNeighbor(train_data, train_labels)
             accuracy = classification_accuracy(knn, k, test_data, test_labels)
             accuracies = np.append(accuracies, accuracy)
         avg_accuracy = np.mean(accuracies)
@@ -96,7 +97,7 @@ def classification_accuracy(knn, k, eval_data, eval_labels):
     '''
     num_data = eval_data.shape[0]
     num_correct_predict = 0
-    for i in num_data:
+    for i in range(num_data):
         data = eval_data[i]
         true_label = eval_labels[i]
         predicted_label = knn.query_knn(data, k)
@@ -107,11 +108,12 @@ def classification_accuracy(knn, k, eval_data, eval_labels):
 
 def main():
     train_data, train_labels, test_data, test_labels = data.load_all_data('data')
-    knn = KNearestNeighbor(train_data, train_labels)
+    # knn = KNearestNeighbor(train_data, train_labels)
 
     # Example usage:
     # predicted_label = knn.query_knn(test_data[0], 1)
-    cross_validation(train_data, train_labels, k_range=np.arange(1, 16))
+    optimal_k = cross_validation(train_data, train_labels, k_range=np.arange(1, 16))
+    print(optimal_k)
 
 if __name__ == '__main__':
     main()
