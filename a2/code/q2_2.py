@@ -80,7 +80,12 @@ def classify_data(digits, means, covariances):
 
 def main():
     train_data, train_labels, test_data, test_labels = data.load_all_data('data')
-
+    print(train_data.shape)
+    print(train_labels.shape)
+    print(train_data[0])
+    print(train_labels == 0)
+    print(train_labels[train_labels == 0])
+    print(train_data[train_labels == 0])
     # Fit the model
     means = compute_mean_mles(train_data, train_labels)
     covariances = compute_sigma_mles(train_data, train_labels)
