@@ -1,0 +1,5 @@
+11314 train data points.
+101631 feature dimension.
+Most common word in training set is "the"
+Logistic regression train accuracy = 0.9567792115962525
+Logistic regression test accuracy = 0.6178969729155602
