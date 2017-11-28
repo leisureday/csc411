@@ -72,6 +72,12 @@ def logistic_regression(train_data, train_labels, test_data, test_labels):
     test_pred = model.predict(test_data)
     print('Logistic regression test accuracy = {}'.format((test_pred == test_labels).mean()))
 
+    cm = confusion_matrix(test_labels, test_pred)
+    print(cm)
+
+    class1, class2 = find_most_confused(cm)
+    print(class1, class2)
+
     return model
 
 
@@ -98,12 +104,30 @@ def decision_tree(train_data, train_labels, test_data, test_labels):
     return model
 
 
+def confusion_matrix(true_labels, pred_labels):
+    result = np.zeros((20, 20))
+    num_labels = true_labels.shape[0]
+    for i in range(num_labels):
+        true_label = true_labels[i]
+        pred_label = pred_labels[i]
+        result[pred_label, true_label] += 1
+    return result
+
+
+def find_most_confused(cm):
+    num_classes = cm.shape[0]
+    for i in range(num_classes):
+        cm[i,i] = 0
+    class1, class2 = np.unravel_index(cm.argmax(), cm.shape)
+    return class1+1, class2+1
+
+
 if __name__ == '__main__':
     train_data, test_data = load_data()
     train_bow, test_bow, feature_names = bow_features(train_data, test_data)
-    # tf_idf_train, tf_idf_test, tf_idf_feature_names = tf_idf_features(train_data, test_data)    
+    # tf_idf_train, tf_idf_test, tf_idf_feature_names = tf_idf_features(train_data, test_data)
 
     # bnb_model = bnb_baseline(train_bow, train_data.target, test_bow, test_data.target)
     # lr_model = logistic_regression(train_bow, train_data.target, test_bow, test_data.target)
     # svm_model = support_vector_machine(train_bow, train_data.target, test_bow, test_data.target)
-    dt_model = decision_tree(train_bow, train_data.target, test_bow, test_data.target)
+    # dt_model = decision_tree(train_bow, train_data.target, test_bow, test_data.target)
