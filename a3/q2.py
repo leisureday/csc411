@@ -105,9 +105,8 @@ class SVM(object):
         '''
         # Compute (sub-)gradient of SVM objective
         num_data = X.shape[0]
-        num_feature = X.shape[1]
-        grad_w = self.w
-        grad_w[-1] = 0
+        grad_w = np.copy(self.w)
+        grad_w[-1] = 0 # do not regularize the bias weight
         hinge_losses = self.hinge_loss(X, y)
         for i in range(num_data):
             if hinge_losses[i] != 0:
@@ -150,6 +149,7 @@ def load_data():
     print("-------------------------------")
     return train_data, train_targets, test_data, test_targets
 
+
 def optimize_test_function(optimizer, w_init=10.0, steps=200):
     '''
     Optimize the simple quadratic test function and return the parameter history.
@@ -187,18 +187,42 @@ def optimize_svm(train_data, train_targets, penalty, optimizer, batchsize, iters
     for i in range(iters):
         batch_data, batch_targets = batchSampler.get_batch()
         grad = svm.grad(batch_data, batch_targets)
-        svm.w, vel = optimizer.update_params(svm.w, grad)
+        svm.w = optimizer.update_params(svm.w, grad)
         
     return svm
 
     
 if __name__ == '__main__':
     # q2.1 implement SGD with momentum and optimize test function
+    '''
     test_optimizer = GDOptimizer(1.0, 0.9)
     w_history = optimize_test_function(test_optimizer)
     plt.plot(w_history)
     plt.ylabel('X_batct')
     plt.xlabel('steps') 
     plt.title('optimize test function')
-    plt.show()    
-    
+    plt.show()
+    '''
+
+    # q2.3 apply svm on 4vs9 digits on MNIST
+    # get data and add bias term to X
+    train_data, train_targets, test_data, test_targets = load_data()
+    train_data = np.append(train_data, np.ones((train_data.shape[0], 1)), axis=1)
+    test_data = np.append(test_data, np.ones((test_data.shape[0], 1)), axis=1)
+    # train svms, alpah=0.05, beta1=0.0, beta2=0.1, penalty=1.0, batch_size=100, iters=500
+    optimizer1 = GDOptimizer(0.05, 0.0)
+    optimizer2 = GDOptimizer(0.05, 0.1)
+    svm1 = optimize_svm(train_data, train_targets, 1.0, optimizer1, 100, 500)
+    svm2 = optimize_svm(train_data, train_targets, 1.0, optimizer2, 100, 500)
+    # get predictions
+    train_pred1 = svm1.classify(train_data)
+    test_pred1 = svm1.classify(test_data)
+    train_pred2 = svm2.classify(train_data)
+    test_pred2 = svm2.classify(test_data)
+    # get accuracies
+    train_accuracy1 = (train_pred1==train_targets).mean()
+    test_accuracy1 = (test_pred1==test_targets).mean()
+    train_accuracy2 = (train_pred2==train_targets).mean()
+    test_accuracy2 = (test_pred2==test_targets).mean()
+
+
