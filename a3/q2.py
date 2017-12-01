@@ -69,39 +69,60 @@ class GDOptimizer(object):
 class SVM(object):
     '''
     A Support Vector Machine
+    Assume add bias feature 1 at the end of each x
     '''
 
     def __init__(self, c, feature_count):
+        '''
+        c: penalty parameter
+        w: weight parameters
+        '''
         self.c = c
         self.w = np.random.normal(0.0, 0.1, feature_count)
         
     def hinge_loss(self, X, y):
         '''
         Compute the hinge-loss for input data X (shape (n, m)) with target y (shape (n,)).
-
+        Given y in {-1, 1}, X have bias feature incorporated.
         Returns a length-n vector containing the hinge-loss per data point.
         '''
         # Implement hinge loss
-        return None
-
+        num_data = X.shape[0]
+        hinge_losses = np.zeros((num_data,))
+        for i in range(num_data):
+            x = X[i]
+            yx = y[i]*np.dot(np.transpose(self.w), x)
+            hinge_loss = max(1-yx, 0)
+            hinge_losses[i] = hinge_loss
+        return hinge_losses
+        
     def grad(self, X, y):
         '''
         Compute the gradient of the SVM objective for input data X (shape (n, m))
         with target y (shape (n,))
-
-        Returns the gradient with respect to the SVM parameters (shape (m,)).
+        Given y in {-1, 1}, X have bias feature incorporated.
+        Returns the gradient with respect to the SVM parameters (shape (m,)), vector.
         '''
         # Compute (sub-)gradient of SVM objective
-        return None
-
+        num_data = X.shape[0]
+        num_feature = X.shape[1]
+        grad_w = self.w
+        grad_w[-1] = 0
+        hinge_losses = self.hinge_loss(X, y)
+        for i in range(num_data):
+            if hinge_losses[i] != 0:
+                grad_w -= y[i]*np.dot(np.transpose(self.w), X[i])*self.c/num_data
+        return grad_w
+        
     def classify(self, X):
         '''
         Classify new input data matrix (shape (n,m)).
-
+        Given X have bias feature incorporated.
         Returns the predicted class labels (shape (n,))
         '''
         # Classify points as +1 or -1
-        return None
+        return np.array([1 if np.dot(np.transpose(self.w), x)>=0 else -1 for x in X])
+
 
 def load_data():
     '''
@@ -150,17 +171,33 @@ def optimize_test_function(optimizer, w_init=10.0, steps=200):
         
     return w_history
 
+
 def optimize_svm(train_data, train_targets, penalty, optimizer, batchsize, iters):
     '''
     Optimize the SVM with the given hyperparameters. Return the trained SVM.
+    penalty: penalty parameter
+    iters: number of iterations
+    Assume train_data has bias feature 1 incorporated
+    return a trained SVM object
     '''
-    return None
+    num_feature = train_data.shape[1]
+    svm = SVM(penalty, num_feature)
+    batchSampler = BatchSampler(train_data, train_targets, batchsize)
+    
+    for i in range(iters):
+        batch_data, batch_targets = batchSampler.get_batch()
+        grad = svm.grad(batch_data, batch_targets)
+        svm.w, vel = optimizer.update_params(svm.w, grad)
+        
+    return svm
 
+    
 if __name__ == '__main__':
+    # q2.1 implement SGD with momentum and optimize test function
     test_optimizer = GDOptimizer(1.0, 0.9)
     w_history = optimize_test_function(test_optimizer)
     plt.plot(w_history)
-    plt.ylabel('w_t')
+    plt.ylabel('X_batct')
     plt.xlabel('steps') 
     plt.title('optimize test function')
     plt.show()    
