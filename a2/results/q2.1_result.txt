@@ -1,0 +1,5 @@
+q2.1
+k= 1 | train accuracy: 1.00000 | test accuracy: 0.96875
+k=15 | train accuracy: 0.96100 | test accuracy: 0.95925
+
+optimal_k= 3 | train accuracy: 0.986571 | average accuracy: 0.967000 | test accuracy: 0.969750

@@ -60,7 +60,7 @@ class KNearestNeighbor(object):
             return label
 
 
-def cross_validation(input_data, input_labels, k_range=np.arange(1,16)):
+def cross_validation(input_data, input_labels, k_range=range(1,16)):
     '''
     Perform 10-fold cross validation to find the best value for k
 
@@ -69,8 +69,8 @@ def cross_validation(input_data, input_labels, k_range=np.arange(1,16)):
     from the new function signature.
     '''
     kf = KFold(n_splits=10, shuffle=True)
-    max_accuracy = 0
-    optimal_k = 0;
+    optimal_k = 0
+    optimal_avg_accuracy = 0
     for k in k_range:
         accuracies = np.zeros(0)
         # loop through 10 folds and compute average accuracy
@@ -83,10 +83,11 @@ def cross_validation(input_data, input_labels, k_range=np.arange(1,16)):
             accuracy = classification_accuracy(knn, k, test_data, test_labels)
             accuracies = np.append(accuracies, accuracy)
         avg_accuracy = np.mean(accuracies)
-        if max_accuracy < avg_accuracy:
-            max_accuracy = avg_accuracy
+        if optimal_avg_accuracy < avg_accuracy:
+            optimal_avg_accuracy = avg_accuracy
             optimal_k = k
-    return optimal_k
+        
+    return optimal_k, optimal_avg_accuracy
 
 
 def classification_accuracy(knn, k, eval_data, eval_labels):
@@ -108,12 +109,22 @@ def classification_accuracy(knn, k, eval_data, eval_labels):
 
 def main():
     train_data, train_labels, test_data, test_labels = data.load_all_data('data')
-    # knn = KNearestNeighbor(train_data, train_labels)
+    knn = KNearestNeighbor(train_data, train_labels)
 
-    # Example usage:
-    # predicted_label = knn.query_knn(test_data[0], 1)
-    optimal_k = cross_validation(train_data, train_labels, k_range=np.arange(1, 16))
-    print(optimal_k)
+    # q2.1.1 report train, test classification accuracies for k = 1, 15
+    for k in [1, 15]:
+        train_accuracy = classification_accuracy(knn, k, train_data, train_labels)
+        test_accuracy = classification_accuracy(knn, k, test_data, test_labels)
+        print('k={:2d} | train accuracy: {:.5f} | test accuracy: {:.5f}'.format(k, train_accuracy, test_accuracy))    
+    
+    # q2.1.3    
+    # use 10-fold cross validation to find optimal k
+    # report train, average, test accuracies for optimal k
+    optimal_k, optimal_avg_accuracies = cross_validation(train_data, train_labels)
+    optimal_train_accuracy = classification_accuracy(knn, optimal_k, train_data, train_labels)
+    optimal_test_accuracy = classification_accuracy(knn, optimal_k, test_data, test_labels)
+    print('optimal_k={:2d} | train accuracy: {:f} | average accuracy: {:f} | test accuracy: {:f}'.format\
+          (optimal_k, optimal_train_accuracy, optimal_avg_accuracies, optimal_test_accuracy))        
 
 if __name__ == '__main__':
     main()

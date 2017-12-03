@@ -1,0 +1,5 @@
+q2.3
+average conditional log likelihood for train set: -0.943754
+average conditional log likelihood for test  set: -0.987270
+classification accuracy for train set: 0.774143
+classification accuracy for test  set: 0.764250

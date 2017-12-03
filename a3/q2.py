@@ -178,7 +178,6 @@ def optimize_svm(train_data, train_targets, penalty, optimizer, batchsize, iters
     penalty: penalty parameter
     iters: number of iterations
     Assume train_data has bias feature 1 incorporated
-    return a trained SVM object
     '''
     num_feature = train_data.shape[1]
     svm = SVM(penalty, num_feature)

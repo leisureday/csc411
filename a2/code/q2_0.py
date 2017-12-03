@@ -15,12 +15,12 @@ def plot_means(train_data, train_labels):
     for i in range(0, 10):
         i_digits = data.get_digits_by_label(train_data, train_labels, i)
         # Compute mean of class i
-        print(i_digits.shape)
         i_digits_mean = np.mean(i_digits, 0).reshape((8,8))
         means.append(i_digits_mean)
 
     # Plot all means on same axis
     all_concat = np.concatenate(means, 1)
+    plt.ion()    
     plt.imshow(all_concat, cmap='gray')
     plt.show()
 
