@@ -110,7 +110,7 @@ class SVM(object):
         hinge_losses = self.hinge_loss(X, y)
         for i in range(num_data):
             if hinge_losses[i] != 0:
-                grad_w -= y[i]*np.dot(np.transpose(self.w), X[i])*self.c/num_data
+                grad_w -= y[i]*X[i]*self.c/num_data
         return grad_w
         
     def classify(self, X):
@@ -224,5 +224,22 @@ if __name__ == '__main__':
     test_accuracy1 = (test_pred1==test_targets).mean()
     train_accuracy2 = (train_pred2==train_targets).mean()
     test_accuracy2 = (test_pred2==test_targets).mean()
-
+    # get hinge loss
+    train_hinge_losses1 = svm1.hinge_loss(train_data, train_targets)
+    test_hinge_losses1 = svm1.hinge_loss(test_data, test_targets)
+    train_hinge_losses2 = svm2.hinge_loss(train_data, train_targets)
+    test_hinge_losses2 = svm2.hinge_loss(test_data, test_targets) 
+    train_loss1 = np.sum(train_hinge_losses1)
+    test_loss1 = np.sum(test_hinge_losses1)
+    train_loss2 = np.sum(train_hinge_losses2)        
+    test_loss2 = np.sum(test_hinge_losses2)
+    # get w and plot, remove bias weight
+    w1 = np.reshape(svm1.w[0:-1], (28,28))
+    w2 = np.reshape(svm2.w[0:-1], (28,28))
+    plt.imshow(w1, cmap='gray')
+    plt.title("beta=0.0")
+    plt.show()    
+    plt.imshow(w2, cmap='gray')
+    plt.title("beta=0.1")
+    plt.show()     
 
