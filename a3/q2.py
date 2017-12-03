@@ -208,36 +208,51 @@ if __name__ == '__main__':
     train_data, train_targets, test_data, test_targets = load_data()
     train_data = np.append(train_data, np.ones((train_data.shape[0], 1)), axis=1)
     test_data = np.append(test_data, np.ones((test_data.shape[0], 1)), axis=1)
+    
     # train svms, alpah=0.05, beta1=0.0, beta2=0.1, penalty=1.0, batch_size=100, iters=500
     optimizer1 = GDOptimizer(0.05, 0.0)
     optimizer2 = GDOptimizer(0.05, 0.1)
     svm1 = optimize_svm(train_data, train_targets, 1.0, optimizer1, 100, 500)
     svm2 = optimize_svm(train_data, train_targets, 1.0, optimizer2, 100, 500)
+    
     # get predictions
     train_pred1 = svm1.classify(train_data)
     test_pred1 = svm1.classify(test_data)
     train_pred2 = svm2.classify(train_data)
     test_pred2 = svm2.classify(test_data)
-    # get accuracies
+    
+    # get and print accuracies
     train_accuracy1 = (train_pred1==train_targets).mean()
     test_accuracy1 = (test_pred1==test_targets).mean()
     train_accuracy2 = (train_pred2==train_targets).mean()
     test_accuracy2 = (test_pred2==test_targets).mean()
-    # get hinge loss
+    print("train accuracy with beta=0.0: {}\n".format(train_accuracy1))
+    print("test accuracy with beta=0.0 : {}\n".format(test_accuracy1))
+    print("train accuracy with beta=0.1: {}\n".format(train_accuracy2))
+    print("test accuracy with beta=0.1 : {}\n".format(test_accuracy2))
+    
+    # get and print hinge loss
     train_hinge_losses1 = svm1.hinge_loss(train_data, train_targets)
     test_hinge_losses1 = svm1.hinge_loss(test_data, test_targets)
     train_hinge_losses2 = svm2.hinge_loss(train_data, train_targets)
     test_hinge_losses2 = svm2.hinge_loss(test_data, test_targets) 
-    train_loss1 = np.sum(train_hinge_losses1)
-    test_loss1 = np.sum(test_hinge_losses1)
-    train_loss2 = np.sum(train_hinge_losses2)        
-    test_loss2 = np.sum(test_hinge_losses2)
+    train_loss1 = np.mean(train_hinge_losses1)
+    test_loss1 = np.mean(test_hinge_losses1)
+    train_loss2 = np.mean(train_hinge_losses2)        
+    test_loss2 = np.mean(test_hinge_losses2)
+    print("train loss with beta=0.0: {}\n".format(train_loss1))
+    print("test loss with beta=0.0 : {}\n".format(test_loss1))
+    print("train loss with beta=0.1: {}\n".format(train_loss2))
+    print("test loss with beta=0.1 : {}\n".format(test_loss2))
+    
     # get w and plot, remove bias weight
     w1 = np.reshape(svm1.w[0:-1], (28,28))
     w2 = np.reshape(svm2.w[0:-1], (28,28))
+    plt.ion()
     plt.imshow(w1, cmap='gray')
     plt.title("beta=0.0")
     plt.show()    
+    plt.ion()
     plt.imshow(w2, cmap='gray')
     plt.title("beta=0.1")
     plt.show()     
