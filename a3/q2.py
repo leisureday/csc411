@@ -2,6 +2,9 @@ import numpy as np
 
 from sklearn.datasets import fetch_mldata
 import matplotlib.pyplot as plt
+import matplotlib.patches as mpatches
+
+plt.show()
 
 np.random.seed(1847)
 
@@ -193,15 +196,18 @@ def optimize_svm(train_data, train_targets, penalty, optimizer, batchsize, iters
     
 if __name__ == '__main__':
     # q2.1 implement SGD with momentum and optimize test function
-    '''
-    test_optimizer = GDOptimizer(1.0, 0.9)
-    w_history = optimize_test_function(test_optimizer)
-    plt.plot(w_history)
-    plt.ylabel('X_batct')
+    test_optimizer1 = GDOptimizer(1.0, 0.9)
+    test_optimizer2 = GDOptimizer(1.0, 0.0)
+    w_history1 = optimize_test_function(test_optimizer1)
+    w_history2 = optimize_test_function(test_optimizer2)    
+    plt.plot(w_history1, 'b', w_history2, 'r')
+    red_patch = mpatches.Patch(color='r', label='beta=0.0')
+    blue_patch = mpatches.Patch(color='b', label='beta=0.9')
+    plt.legend(handles=[red_patch, blue_patch])  
+    plt.ylabel('w')
     plt.xlabel('steps') 
     plt.title('optimize test function')
     plt.show()
-    '''
 
     # q2.3 apply svm on 4vs9 digits on MNIST
     # get data and add bias term to X

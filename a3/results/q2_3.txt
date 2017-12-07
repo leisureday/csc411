@@ -1,17 +1,10 @@
 train accuracy with beta=0.0: 0.9126530612244897
-
 test accuracy with beta=0.0 : 0.9147624229234675
-
 train accuracy with beta=0.1: 0.9057596371882086
-
 test accuracy with beta=0.1 : 0.9038810301051868
 
 Used average of hinge loss as loss
-
 train loss with beta=0.0: 0.397240485900029
-
 test loss with beta=0.0 : 0.40062763119052897
-
 train loss with beta=0.1: 0.35458218099670796
-
 test loss with beta=0.1 : 0.34278258535832506

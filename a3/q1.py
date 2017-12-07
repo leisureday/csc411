@@ -114,12 +114,16 @@ def confusion_matrix(true_labels, pred_labels):
     return result
 
 
-def find_most_confused(cm):
+def find_most_confused(original_cm):
+    cm = np.copy(original_cm)
     num_classes = cm.shape[0]
     for i in range(num_classes):
-        cm[i,i] = 0
+        for j in range(num_classes):
+            cm[i,j] = original_cm[i,j]+original_cm[j,i]
+            cm[j,i] = original_cm[i,j]+original_cm[j,i]  
+        cm[i,i] = 0                
     class1, class2 = np.unravel_index(cm.argmax(), cm.shape)
-    return class1+1, class2+1
+    return class1, class2
 
 
 if __name__ == '__main__':
@@ -127,7 +131,7 @@ if __name__ == '__main__':
     train_bow, test_bow, feature_names = bow_features(train_data, test_data)
     # tf_idf_train, tf_idf_test, tf_idf_feature_names = tf_idf_features(train_data, test_data)
 
-    # bnb_model = bnb_baseline(train_bow, train_data.target, test_bow, test_data.target)
-    # lr_model = logistic_regression(train_bow, train_data.target, test_bow, test_data.target)
-    # svm_model = support_vector_machine(train_bow, train_data.target, test_bow, test_data.target)
-    # dt_model = decision_tree(train_bow, train_data.target, test_bow, test_data.target)
+    bnb_model = bnb_baseline(train_bow, train_data.target, test_bow, test_data.target)
+    lr_model = logistic_regression(train_bow, train_data.target, test_bow, test_data.target)
+    svm_model = support_vector_machine(train_bow, train_data.target, test_bow, test_data.target)
+    dt_model = decision_tree(train_bow, train_data.target, test_bow, test_data.target)
